@@ -1,25 +1,25 @@
 package com.Romito.ecommerce_api.controller;
 
-import com.Romito.ecommerce_api.config.SecurityConfig;
 import com.Romito.ecommerce_api.dto.AuthResponse;
 import com.Romito.ecommerce_api.dto.LoginRequest;
 import com.Romito.ecommerce_api.dto.RegisterRequest;
 import com.Romito.ecommerce_api.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
+import com.Romito.ecommerce_api.security.JwtAuthenticationFilter;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
     @Autowired
@@ -30,6 +30,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void registraUsuarioDevuelve201ConToken() throws Exception {

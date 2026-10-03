@@ -15,8 +15,12 @@ import java.math.BigDecimal;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase
+
 class SecurityIntegrationTest {
 
     @Autowired
@@ -55,7 +59,39 @@ class SecurityIntegrationTest {
                         .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
     }
+   @Test
+    void adminPuedeCrearProducto() throws Exception {
+        String loginResponse = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"admin","password":"Admin123!"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
+        String token = jsonMapper.readTree(loginResponse).get("token").asText();
+
+        String categoryResponse = mockMvc.perform(post("/api/categories")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Periféricos"}
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Long categoryId = jsonMapper.readTree(categoryResponse).get("id").asLong();
+
+        ProductRequest request = new ProductRequest(
+                "Teclado mecánico", "Switches rojos",
+                new BigDecimal("45000.00"), 10, categoryId);
+
+        mockMvc.perform(post("/api/products")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+    }
     private String registrarYObtenerToken(String username, String email, String password) throws Exception {
         RegisterRequest request = new RegisterRequest(username, email, password);
 

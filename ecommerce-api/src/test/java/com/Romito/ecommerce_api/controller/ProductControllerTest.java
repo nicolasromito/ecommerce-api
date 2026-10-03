@@ -1,7 +1,5 @@
 package com.Romito.ecommerce_api.controller;
 
-import org.springframework.context.annotation.Import;
-import com.Romito.ecommerce_api.config.SecurityConfig;
 import tools.jackson.databind.json.JsonMapper;
 import com.Romito.ecommerce_api.dto.ProductRequest;
 import com.Romito.ecommerce_api.dto.ProductResponse;
@@ -20,19 +18,24 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.Romito.ecommerce_api.security.JwtAuthenticationFilter;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 
 @WebMvcTest(ProductController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ProductControllerTest {
 
-        @Autowired
-        private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-        @Autowired
-        private JsonMapper jsonMapper;
+    @Autowired
+    private JsonMapper jsonMapper;
 
-        @MockitoBean
-        private ProductService productService;
+    @MockitoBean
+    private ProductService productService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void creaProductoDevuelve201() throws Exception {
@@ -67,11 +70,11 @@ class ProductControllerTest {
     }
 
     @Test
-        void buscarProductoInexistenteLanzaExcepcionSinManejar() {
+    void buscarProductoInexistenteLanzaExcepcionSinManejar() {
         when(productService.findById(999L))
                 .thenThrow(new NoSuchElementException("Producto no encontrado: 999"));
 
         assertThrows(Exception.class, () ->
                 mockMvc.perform(get("/api/products/999")));
-        }
+    }
 }
