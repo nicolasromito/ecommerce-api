@@ -70,17 +70,41 @@ public class OrderService {
     }
 
     private OrderResponse toResponse(Order order) {
-        List<OrderItemResponse> items = order.getItems().stream()
-                .map(item -> new OrderItemResponse(
-                        item.getProduct().getId(),
-                        item.getProduct().getName(),
-                        item.getQuantity(),
-                        item.getUnitPrice(),
-                        item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))
-                ))
-                .toList();
+                List<OrderItemResponse> items = order.getItems().stream()
+                        .map(item -> new OrderItemResponse(
+                                item.getProduct().getId(),
+                                item.getProduct().getName(),
+                                item.getQuantity(),
+                                item.getUnitPrice(),
+                                item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))
+                        ))
+                        .toList();
 
-        return new OrderResponse(
-                order.getId(), order.getTotal(), order.getStatus(), order.getCreatedAt(), items);
-    }
+                return new OrderResponse(
+                        order.getId(), order.getTotal(), order.getStatus(), order.getCreatedAt(), items);
+        }
+
+        public List<OrderResponse> findMyOrders(String username) {
+        AppUser user = appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + username));
+
+        return orderRepository.findByUserId(user.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+        }
+
+        public OrderResponse findMyOrderById(String username, Long orderId) {
+        AppUser user = appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + username));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NoSuchElementException("Orden no encontrada: " + orderId));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+                throw new SecurityException("No tenés permiso para ver esta orden");
+        }
+
+        return toResponse(order);
+        }
 }

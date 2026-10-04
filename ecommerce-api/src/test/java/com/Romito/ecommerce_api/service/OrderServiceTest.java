@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -105,5 +106,67 @@ class OrderServiceTest {
         // 2 * 10000 + 1 * 45000 = 65000
         assertEquals(0, new BigDecimal("65000.00").compareTo(response.total()));
         assertEquals(2, response.items().size());
+    }
+
+    @Test
+    void findMyOrdersDevuelveSoloLasOrdenesDelUsuario() {
+        AppUser user = new AppUser();
+        user.setId(1L);
+        user.setUsername("compradora2");
+
+        Order order = new Order();
+        order.setId(2L);
+        order.setUser(user);
+        order.setTotal(new BigDecimal("12000.00"));
+        order.setStatus(OrderStatus.PENDING);
+
+        when(appUserRepository.findByUsername("compradora2")).thenReturn(Optional.of(user));
+        when(orderRepository.findByUserId(1L)).thenReturn(List.of(order));
+
+        List<OrderResponse> result = orderService.findMyOrders("compradora2");
+
+        assertEquals(1, result.size());
+        assertEquals(2L, result.get(0).id());
+    }
+
+    @Test
+    void findMyOrderByIdDevuelveLaOrdenSiEsDelPropioUsuario() {
+        AppUser user = new AppUser();
+        user.setId(1L);
+        user.setUsername("compradora2");
+
+        Order order = new Order();
+        order.setId(2L);
+        order.setUser(user);
+        order.setTotal(new BigDecimal("12000.00"));
+        order.setStatus(OrderStatus.PENDING);
+
+        when(appUserRepository.findByUsername("compradora2")).thenReturn(Optional.of(user));
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(order));
+
+        OrderResponse response = orderService.findMyOrderById("compradora2", 2L);
+
+        assertEquals(2L, response.id());
+    }
+
+    @Test
+    void findMyOrderByIdRechazaVerLaOrdenDeOtroUsuario() {
+        AppUser dueño = new AppUser();
+        dueño.setId(1L);
+        dueño.setUsername("compradora2");
+
+        AppUser otroUsuario = new AppUser();
+        otroUsuario.setId(2L);
+        otroUsuario.setUsername("compradora3");
+
+        Order order = new Order();
+        order.setId(2L);
+        order.setUser(dueño);
+
+        when(appUserRepository.findByUsername("compradora3")).thenReturn(Optional.of(otroUsuario));
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(order));
+
+        assertThrows(SecurityException.class,
+                () -> orderService.findMyOrderById("compradora3", 2L));
     }
 }
