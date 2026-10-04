@@ -4,11 +4,18 @@ import com.Romito.ecommerce_api.dto.ProductRequest;
 import com.Romito.ecommerce_api.dto.ProductResponse;
 import com.Romito.ecommerce_api.service.ProductService;
 import jakarta.validation.Valid;
+
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.math.BigDecimal;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/products")
@@ -21,8 +28,12 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<ProductResponse> findAll() {
-        return productService.findAll();
+    public Page<ProductResponse> findAll(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @PageableDefault(size = 10, sort = "name") Pageable pageable) {
+        return productService.findAll(categoryId, minPrice, maxPrice, pageable);
     }
 
     @GetMapping("/{id}")

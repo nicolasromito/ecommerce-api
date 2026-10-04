@@ -6,9 +6,15 @@ import com.Romito.ecommerce_api.model.Category;
 import com.Romito.ecommerce_api.model.Product;
 import com.Romito.ecommerce_api.repository.CategoryRepository;
 import com.Romito.ecommerce_api.repository.ProductRepository;
+import com.Romito.ecommerce_api.specification.ProductSpecifications;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import java.math.BigDecimal;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -23,12 +29,16 @@ public class ProductService {
         this.categoryRepository = categoryRepository;
     }
 
-    public List<ProductResponse> findAll() {
-        return productRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
+    public Page<ProductResponse> findAll(Long categoryId, BigDecimal minPrice,
+                                      BigDecimal maxPrice, Pageable pageable) {
+        Specification<Product> spec = Specification
+                .where(ProductSpecifications.hasCategoryId(categoryId))
+                .and(ProductSpecifications.hasPriceGreaterThanOrEqual(minPrice))
+                .and(ProductSpecifications.hasPriceLessThanOrEqual(maxPrice));
+
+        return productRepository.findAll(spec, pageable)
+                .map(this::toResponse);
+        }
 
     public ProductResponse findById(Long id) {
         Product product = productRepository.findById(id)
