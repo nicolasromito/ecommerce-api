@@ -69,12 +69,13 @@ class ProductControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    void buscarProductoInexistenteLanzaExcepcionSinManejar() {
+        @Test
+        void buscarProductoInexistenteDevuelve404() throws Exception {
         when(productService.findById(999L))
                 .thenThrow(new NoSuchElementException("Producto no encontrado: 999"));
 
-        assertThrows(Exception.class, () ->
-                mockMvc.perform(get("/api/products/999")));
-    }
+        mockMvc.perform(get("/api/products/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Producto no encontrado: 999"));
+        }
 }
