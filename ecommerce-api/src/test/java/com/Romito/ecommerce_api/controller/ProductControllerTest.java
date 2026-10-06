@@ -78,4 +78,15 @@ class ProductControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Producto no encontrado: 999"));
         }
+
+        @Test
+        void creaProductoConPrecioExcesivoDevuelve400() throws Exception {
+        ProductRequest invalido = new ProductRequest(
+                "PC gamer", null, new BigDecimal("111111110.00"), 5, 1L);
+
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(invalido)))
+                .andExpect(status().isBadRequest());
+        }
 }
