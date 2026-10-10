@@ -15,8 +15,8 @@ function Header() {
   return (
     <header style={{ display: 'flex', gap: '1rem', padding: '1rem', borderBottom: '1px solid #ccc' }}>
       <Link to="/">Catálogo</Link>
-      <Link to="/cart">Carrito ({itemCount})</Link>
-
+      {user &&<Link to="/cart">Carrito ({itemCount})</Link>}
+        {user && <Link to="/orders">Mis órdenes</Link>}
       {user ? (
         <>
           <span>Hola, {user.username} ({user.role})</span>
